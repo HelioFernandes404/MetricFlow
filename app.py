@@ -1,12 +1,16 @@
 from flask import Flask, Response
 from prometheus_client import Counter, Histogram, Gauge, Summary, generate_latest
 import json
+import os
 import random
 import time
 import psutil
 import logging
 from threading import Thread
 from flasgger import Swagger
+
+# Usando a variável de ambiente LOG_FILE_PATH
+log_file_path = os.getenv('LOG_FILE_PATH', 'metric-flow-logger.log')
 
 
 # Cria o logger
@@ -18,7 +22,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)  # Define o nível de severidade para o console
 
 # Cria o manipulador para o arquivo
-file_handler = logging.FileHandler('metric-flow-logger.log')
+file_handler = logging.FileHandler(log_file_path)
 file_handler.setLevel(logging.DEBUG)  # Define o nível de severidade para o arquivo
 
 # Define o formato para o console
@@ -49,6 +53,8 @@ CPU_USAGE = Gauge('app_cpu_usage_percent', 'Uso de CPU em porcentagem')
 MEMORY_USAGE = Gauge('app_memory_usage_bytes', 'Uso de memória em bytes')
 MY_CUSTOM_METRIC = Counter('my_custom_metric_total', 'Descrição da minha métrica personalizada')
 REQUEST_TIME = Summary('request_processing_seconds', 'Tempo gasto processando requisições')
+request_duration = Gauge('http_request_duration_seconds', 'Duration of HTTP requests in seconds')
+
 
 def collect_system_metrics():
     CPU_USAGE.set(psutil.cpu_percent())
@@ -133,9 +139,18 @@ def metrics():
 
 @app.route('/logs')
 def logs():
-    with open('metric-flow-logger.log', 'r') as f:
-        log_content = f.read()
-    return Response(log_content, mimetype='text/plain')
+    try:
+        with open(log_file_path, 'r') as f:
+            log_content = f.read()
+        return Response(log_content, mimetype='text/plain')
+    except Exception as e:
+        return str(e), 500
+    
+def collect_metrics():
+    while True:
+        request_duration.set(random.random())  # Gera um valor aleatório para simular uma métrica
+        time.sleep(1)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+    collect_metrics()

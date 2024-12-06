@@ -1,0 +1,4 @@
+scrape_configs:
+  - job_name: 'web-api-metrics'
+    static_configs:
+      - targets: ['web-api:5000/metrics']  # Aqui você coloca o endpoint do seu aplicativo que expõe as métricas

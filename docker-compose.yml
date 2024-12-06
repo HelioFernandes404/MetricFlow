@@ -3,5 +3,37 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: web-api:latest
+    container_name: metric-flow-container
+    volumes:
+      - ./logs:/app/logs
     ports:
       - "5000:5000"
+    environment:
+      - LOG_FILE_PATH=/app/logs/metric-flow-logger.log
+      - TZ=America/Sao_Paulo
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"  # Porta padrão do VictoriaMetrics
+    environment:
+      - TZ=America/Sao_Paulo
+    volumes:
+      - victoria-data:/victoria-metrics-data
+
+  vmagent:
+    image: victoriametrics/vmagent
+    container_name: vmagent
+    command:
+      -promscrape.config=/etc/vmagent/prometheus.yml
+      -remoteWrite.url=http://victoria-metrics:8428/api/v1/write
+    volumes:
+      - ./vmagent/prometheus.yml:/etc/vmagent/prometheus.yml
+    ports:
+      - "8429:8429"  # Porta para acessar as métricas do vmagent (opcional)
+
+volumes:
+  victoria-data:
+    driver: local

@@ -18,3 +18,18 @@
 {"time": "2024-12-05 23:39:53,380", "level": "ERROR", "message": "Erro simulado no endpoint /error", "module": "app"}
 {"time": "2024-12-05 23:40:08,305", "level": "INFO", "message": "Processamento concluído em 0.19 segundos.", "module": "app"}
 {"time": "2024-12-05 23:40:09,867", "level": "INFO", "message": "Processamento concluído em 0.36 segundos.", "module": "app"}
+{"time": "2024-12-06 15:23:12,992", "level": "ERROR", "message": "Erro ao chamar http://127.0.0.1:5000/: name 'requests' is not defined", "module": "app"}
+{"time": "2024-12-06 15:23:17,088", "level": "ERROR", "message": "Erro ao chamar http://127.0.0.1:5000/login: name 'requests' is not defined", "module": "app"}
+{"time": "2024-12-06 15:23:20,179", "level": "ERROR", "message": "Erro ao chamar http://127.0.0.1:5000/process: name 'requests' is not defined", "module": "app"}
+{"time": "2024-12-06 15:23:44,762", "level": "ERROR", "message": "Erro ao chamar http://127.0.0.1:5000/: HTTPConnectionPool(host='127.0.0.1', port=5000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f6d468c3a10>: Failed to establish a new connection: [Errno 111] Connection refused'))", "module": "app"}
+{"time": "2024-12-06 15:23:48,598", "level": "INFO", "message": "Login processado em 0.12 segundos.", "module": "app"}
+{"time": "2024-12-06 15:23:48,600", "level": "INFO", "message": "Endpoint http://127.0.0.1:5000/login chamado com status 200", "module": "app"}
+{"time": "2024-12-06 15:23:54,291", "level": "INFO", "message": "Processamento concluído em 0.48 segundos.", "module": "app"}
+{"time": "2024-12-06 15:23:54,293", "level": "INFO", "message": "Endpoint http://127.0.0.1:5000/process chamado com status 200", "module": "app"}
+{"time": "2024-12-06 15:23:58,141", "level": "ERROR", "message": "Erro simulado no endpoint /error", "module": "app"}
+{"time": "2024-12-06 15:23:58,143", "level": "INFO", "message": "Endpoint http://127.0.0.1:5000/error chamado com status 500", "module": "app"}
+{"time": "2024-12-06 15:24:03,157", "level": "INFO", "message": "Dados recuperados em 0.46 segundos.", "module": "app"}
+{"time": "2024-12-06 15:24:03,159", "level": "INFO", "message": "Endpoint http://127.0.0.1:5000/data chamado com status 200", "module": "app"}
+{"time": "2024-12-06 15:24:06,485", "level": "INFO", "message": "Item 1 recuperado em 0.15 segundos.", "module": "app"}
+{"time": "2024-12-06 15:24:06,487", "level": "INFO", "message": "Endpoint http://127.0.0.1:5000/item/1 chamado com status 200", "module": "app"}
+{"time": "2024-12-06 15:24:10,383", "level": "INFO", "message": "Endpoint http://127.0.0.1:5000/active_users chamado com status 200", "module": "app"}

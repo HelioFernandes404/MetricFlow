@@ -1,4 +1,5 @@
 from flask import Flask, Response
+import requests
 from prometheus_client import Counter, Histogram, Gauge, Summary, generate_latest
 import json
 import os
@@ -12,24 +13,19 @@ from flasgger import Swagger
 # Usando a variável de ambiente LOG_FILE_PATH
 log_file_path = os.getenv('LOG_FILE_PATH', 'metric-flow-logger.log')
 
-
 # Cria o logger
 logger = logging.getLogger('minha_api')
-logger.setLevel(logging.DEBUG)  # Define o nível de severidade do logger
+logger.setLevel(logging.DEBUG)
 
-# Cria o manipulador para o console
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)  # Define o nível de severidade para o console
+console_handler.setLevel(logging.INFO)
 
-# Cria o manipulador para o arquivo
 file_handler = logging.FileHandler(log_file_path)
-file_handler.setLevel(logging.DEBUG)  # Define o nível de severidade para o arquivo
+file_handler.setLevel(logging.DEBUG)
 
-# Define o formato para o console
 console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 console_handler.setFormatter(console_formatter)
 
-# Define o formato para o arquivo em JSON
 file_formatter = logging.Formatter(json.dumps({
     'time': '%(asctime)s',
     'level': '%(levelname)s',
@@ -38,10 +34,8 @@ file_formatter = logging.Formatter(json.dumps({
 }))
 file_handler.setFormatter(file_formatter)
 
-# Adiciona os manipuladores ao logger
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
-
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -53,38 +47,50 @@ CPU_USAGE = Gauge('app_cpu_usage_percent', 'Uso de CPU em porcentagem')
 MEMORY_USAGE = Gauge('app_memory_usage_bytes', 'Uso de memória em bytes')
 MY_CUSTOM_METRIC = Counter('my_custom_metric_total', 'Descrição da minha métrica personalizada')
 REQUEST_TIME = Summary('request_processing_seconds', 'Tempo gasto processando requisições')
-request_duration = Gauge('http_request_duration_seconds', 'Duration of HTTP requests in seconds')
 
+# Lista de endpoints para chamadas periódicas
+ENDPOINTS = [
+    "http://127.0.0.1:5000/",
+    "http://127.0.0.1:5000/login",
+    "http://127.0.0.1:5000/process",
+    "http://127.0.0.1:5000/error",
+    "http://127.0.0.1:5000/data",
+    "http://127.0.0.1:5000/item/1",
+    "http://127.0.0.1:5000/active_users"
+]
 
+# Função para chamar endpoints periodicamente
+def call_endpoints_periodically():
+    while True:
+        for endpoint in ENDPOINTS:
+            try:
+                response = requests.get(endpoint)
+                logger.info(f"Endpoint {endpoint} chamado com status {response.status_code}")
+            except Exception as e:
+                logger.error(f"Erro ao chamar {endpoint}: {e}")
+            time.sleep(random.uniform(3, 6))  # Espera entre 3 a 6 segundos antes de chamar o próximo
+
+# Função de coleta de métricas do sistema
 def collect_system_metrics():
     CPU_USAGE.set(psutil.cpu_percent())
     MEMORY_USAGE.set(psutil.virtual_memory().used)
 
-# Chama collect_system_metrics periodicamente
 def metrics_collector():
     while True:
         collect_system_metrics()
         time.sleep(5)
 
 Thread(target=metrics_collector, daemon=True).start()
+Thread(target=call_endpoints_periodically, daemon=True).start()
 
-@REQUEST_TIME.time()
-def some_function():
-    # Lógica da função
-    MY_CUSTOM_METRIC.inc()
-    # Simula algum processamento
-    time.sleep(random.uniform(0.05, 0.15))
-
-# API
 @app.route('/')
 def index():
     REQUEST_COUNT.labels(endpoint='/', http_status=200).inc()
     with REQUEST_LATENCY.labels(endpoint='/').time():
         processing_time = random.uniform(0.1, 0.5)
         time.sleep(processing_time)
-    message = f"Processamento de {processing_time:.2f} segundos."
-    logger.info(message)
-    return message
+    logger.info(f"Processamento de {processing_time:.2f} segundos.")
+    return f"Processamento de {processing_time:.2f} segundos."
 
 @app.route('/login')
 def login():
@@ -92,20 +98,17 @@ def login():
     with REQUEST_LATENCY.labels(endpoint='/login').time():
         processing_time = random.uniform(0.1, 0.3)
         time.sleep(processing_time)
-    message = f"Login processado em {processing_time:.2f} segundos."
-    logger.info(message)
-    return message
+    logger.info(f"Login processado em {processing_time:.2f} segundos.")
+    return f"Login processado em {processing_time:.2f} segundos."
 
 @app.route('/process')
 def process():
     REQUEST_COUNT.labels(endpoint='/process', http_status=200).inc()
     with REQUEST_LATENCY.labels(endpoint='/process').time():
-        some_function()
         processing_time = random.uniform(0.1, 0.5)
         time.sleep(processing_time)
-    message = f"Processamento concluído em {processing_time:.2f} segundos."
-    logger.info(message)
-    return message
+    logger.info(f"Processamento concluído em {processing_time:.2f} segundos.")
+    return f"Processamento concluído em {processing_time:.2f} segundos."
 
 @app.route('/error')
 def error():
@@ -119,9 +122,8 @@ def data():
     with REQUEST_LATENCY.labels(endpoint='/data').time():
         processing_time = random.uniform(0.2, 1)
         time.sleep(processing_time)
-    message = f"Dados recuperados em {processing_time:.2f} segundos."
-    logger.info(message)
-    return message
+    logger.info(f"Dados recuperados em {processing_time:.2f} segundos.")
+    return f"Dados recuperados em {processing_time:.2f} segundos."
 
 @app.route('/item/<item_id>')
 def get_item(item_id):
@@ -129,28 +131,16 @@ def get_item(item_id):
     with REQUEST_LATENCY.labels(endpoint='/item').time():
         processing_time = random.uniform(0.1, 0.2)
         time.sleep(processing_time)
-    message = f"Item {item_id} recuperado em {processing_time:.2f} segundos."
-    logger.info(f"Requisição para /item/{item_id} processada.")
-    return message
+    logger.info(f"Item {item_id} recuperado em {processing_time:.2f} segundos.")
+    return f"Item {item_id} recuperado em {processing_time:.2f} segundos."
+
+@app.route('/active_users')
+def active_users():
+    return f"Usuários ativos."
 
 @app.route('/metrics')
 def metrics():
     return Response(generate_latest(), mimetype='text/plain')
 
-@app.route('/logs')
-def logs():
-    try:
-        with open(log_file_path, 'r') as f:
-            log_content = f.read()
-        return Response(log_content, mimetype='text/plain')
-    except Exception as e:
-        return str(e), 500
-    
-def collect_metrics():
-    while True:
-        request_duration.set(random.random())  # Gera um valor aleatório para simular uma métrica
-        time.sleep(1)
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-    collect_metrics()

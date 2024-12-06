@@ -2,3 +2,4 @@ Flask
 prometheus_client
 psutil
 flasgger
+requests

@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  web-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app:/app
+      - ./logs:/app/logs  # Diretório para logs
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"  # Interface Web do Victoria Metrics
+    command:
+      - '-retentionPeriod=1'
+    environment:
+      - SCRAPE_TARGETS=http://web-api:5000/metrics
+    volumes:
+      - ./victoria-metrics-data:/storage
+
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/var/loki
+
+  promtail:
+    image: grafana/promtail:2.8.2
+    container_name: promtail
+    volumes:
+      - ./logs:/var/log/web-api  # Diretório dos logs da aplicação
+      - ./promtail-config.yaml:/promtail-config.yaml
+    command: -config.file=/promtail-config.yaml
+
+  grafana:
+    image: grafana/grafana:9.5.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=yourpassword
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - victoria-metrics
+      - loki
+
+volumes:
+  victoria-metrics-data:
+  grafana-data:
+  loki-data:

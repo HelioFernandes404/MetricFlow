@@ -33,7 +33,22 @@ services:
       - ./vmagent/prometheus.yml:/etc/vmagent/prometheus.yml
     ports:
       - "8429:8429"  # Porta para acessar as métricas do vmagent (opcional)
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Porta padrão do Grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Definindo a senha de admin do Grafana
+      - GF_SECURITY_ALLOW_EMBEDDING=true  # Permite embutir gráficos, se necessário
+    depends_on:
+      - victoria-metrics  # Espera o VictoriaMetrics estar up
+    volumes:
+      - grafana-data:/var/lib/grafana  # Persistência dos dados do Grafana
 
 volumes:
   victoria-data:
+    driver: local
+  grafana-data:
     driver: local

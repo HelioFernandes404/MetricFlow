@@ -18,7 +18,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)  # Define o nível de severidade para o console
 
 # Cria o manipulador para o arquivo
-file_handler = logging.FileHandler('app.log')
+file_handler = logging.FileHandler('metric-flow-logger.log')
 file_handler.setLevel(logging.DEBUG)  # Define o nível de severidade para o arquivo
 
 # Define o formato para o console
@@ -111,7 +111,7 @@ def error():
 def data():
     REQUEST_COUNT.labels(endpoint='/data', http_status=200).inc()
     with REQUEST_LATENCY.labels(endpoint='/data').time():
-        processing_time = random.uniform(0.2, 0.6)
+        processing_time = random.uniform(0.2, 1)
         time.sleep(processing_time)
     message = f"Dados recuperados em {processing_time:.2f} segundos."
     logger.info(message)
@@ -133,9 +133,9 @@ def metrics():
 
 @app.route('/logs')
 def logs():
-    with open('app.log', 'r') as f:
+    with open('metric-flow-logger.log', 'r') as f:
         log_content = f.read()
     return Response(log_content, mimetype='text/plain')
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=5000)

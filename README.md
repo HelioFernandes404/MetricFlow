@@ -1,66 +1,46 @@
 # MetricFlow
+This is Showcase the my skills in Data Science and technology the DevOps. 
 
-**MetricFlow** é um projeto que integra **VictoriaMetrics**, **Python** e **Grafana** para criar um sistema de monitoramento eficiente e escalável.
+## Features
+- Generate metrics ( 10.000+ metrics )
+- Handle large datasets
+- Use of python libraries 
+- Process data with technologies high ( victoria metrics, influxdb, prometheus )
 
-## Descrição
+## Stacks
+- Language: Python
+- Tools:
+- Infra: Ubuntu
 
-Este projeto foi desenvolvido para explorar e demonstrar a utilização do VictoriaMetrics, um banco de dados de séries temporais de alto desempenho e escalabilidade. Utilizando Python para coleta de métricas e Grafana para visualização, o MetricFlow oferece uma solução completa para monitoramento de sistemas.
+## Installation
 
-## Funcionalidades
+```bash
+git@github.com:HelioFernandes404/speech2text.git
+cd speech2text
+pip install -r requirements
+```
 
-- Coleta de métricas personalizadas utilizando scripts em Python.
-- Armazenamento eficiente de dados temporais com o VictoriaMetrics.
-- Visualização interativa de métricas através de dashboards no Grafana.
+## 🧪 Usege
+```bash
+python3 script.py --input audio.mp3
+```
 
-## Requisitos
+## Project Strcture 
+```bash
+.
+├── README.md
+├── requirements.txt
+├── script.py
+└── tx
+2 directories, 3 files
+```
 
-- Docker e Docker Compose instalados na máquina.
-- Conhecimentos básicos em Python.
+## Configuration
+- none
 
-## Instalação
+## Maintenance
+- How to clean, rebuild, reconfigure.
 
-1. **Clone o repositório:**
+## Notes
+- none
 
-   ```bash
-   git clone https://github.com/HelioFernandes404/MetricFlow.git
-   ```
-
-2. **Navegue até o diretório do projeto:**
-
-   ```bash
-   cd MetricFlow
-   ```
-
-3. **Inicie os serviços com Docker Compose:**
-
-   ```bash
-   docker-compose up -d
-   ```
-
-   Este comando iniciará os contêineres do VictoriaMetrics e do Grafana.
-
-## Configuração
-
-1. **Configurar o Grafana:**
-
-   - Acesse o Grafana em `http://localhost:3000`.
-   - Adicione o VictoriaMetrics como fonte de dados:
-     - URL: `http://victoriametrics:8428`
-   - Importe os dashboards disponíveis no diretório `grafana_dashboards` do projeto.
-
-2. **Executar scripts de coleta de métricas:**
-
-   - No diretório `scripts`, execute os scripts Python para coletar e enviar métricas para o VictoriaMetrics.
-
-## Uso
-
-- Após a configuração, utilize o Grafana para visualizar as métricas coletadas em tempo real.
-- Personalize os dashboards conforme necessário para atender às necessidades específicas de monitoramento.
-
-## Contribuição
-
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
-
-## Licença
-
-Este projeto está licenciado sob a [Licença MIT](LICENSE).

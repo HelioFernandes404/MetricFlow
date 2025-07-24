@@ -1,9 +1,13 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
+WORKDIR /app
 
-WORKDIR /publish
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "/publish/app.py"]
+COPY src/ ./src/
+COPY config/ ./config/
+
+EXPOSE 8080
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "src.app:app"]

@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: metricflow-project
+  namespace: argocd
+spec:
+  description: MetricFlow DevOps Project
+  
+  sourceRepos:
+  - 'https://github.com/your-username/MetricFlow'
+  - 'https://charts.bitnami.com/bitnami'
+  - 'https://prometheus-community.github.io/helm-charts'
+  
+  destinations:
+  - namespace: metricflow
+    server: https://kubernetes.default.svc
+  - namespace: monitoring
+    server: https://kubernetes.default.svc
+  - namespace: kube-system
+    server: https://kubernetes.default.svc
+  
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  - group: 'rbac.authorization.k8s.io'
+    kind: ClusterRole
+  - group: 'rbac.authorization.k8s.io'
+    kind: ClusterRoleBinding
+  - group: 'apiextensions.k8s.io'
+    kind: CustomResourceDefinition
+  
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ConfigMap
+  - group: ''
+    kind: Secret
+  - group: 'apps'
+    kind: Deployment
+  - group: 'apps'
+    kind: StatefulSet
+  - group: 'networking.k8s.io'
+    kind: Ingress
+  - group: 'autoscaling'
+    kind: HorizontalPodAutoscaler
+  
+  roles:
+  - name: admin
+    description: Admin privileges to metricflow project
+    policies:
+    - p, proj:metricflow-project:admin, applications, *, metricflow-project/*, allow
+    - p, proj:metricflow-project:admin, repositories, *, *, allow
+    groups:
+    - metricflow-admins
+  
+  - name: developer
+    description: Developer access to metricflow project
+    policies:
+    - p, proj:metricflow-project:developer, applications, get, metricflow-project/*, allow
+    - p, proj:metricflow-project:developer, applications, sync, metricflow-project/*, allow
+    groups:
+    - metricflow-developers

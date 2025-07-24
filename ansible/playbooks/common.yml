@@ -1,0 +1,75 @@
+---
+- name: Configure common settings
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install common packages
+      apt:
+        name:
+          - curl
+          - wget
+          - vim
+          - htop
+          - unzip
+          - git
+          - jq
+          - net-tools
+          - ca-certificates
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Configure timezone
+      timezone:
+        name: UTC
+
+    - name: Configure NTP
+      systemd:
+        name: systemd-timesyncd
+        state: started
+        enabled: yes
+
+    - name: Set hostname
+      hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Update /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ ip }} {{ inventory_hostname }}"
+        regexp: "^{{ ip }}"
+        state: present
+
+    - name: Configure SSH hardening
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+      notify: restart ssh
+
+    - name: Setup firewall
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        port: '22'
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted

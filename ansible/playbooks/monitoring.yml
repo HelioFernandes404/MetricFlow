@@ -1,0 +1,158 @@
+---
+- name: Setup monitoring infrastructure
+  hosts: monitoring
+  become: yes
+  tasks:
+    - name: Create monitoring user
+      user:
+        name: monitoring
+        system: yes
+        shell: /bin/false
+        home: /var/lib/monitoring
+        create_home: yes
+
+    - name: Install Node Exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+
+    - name: Extract Node Exporter
+      unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Install Node Exporter binary
+      copy:
+        src: /tmp/node_exporter-1.6.1.linux-amd64/node_exporter
+        dest: /usr/local/bin/node_exporter
+        mode: '0755'
+        owner: monitoring
+        group: monitoring
+        remote_src: yes
+
+    - name: Create Node Exporter service
+      copy:
+        content: |
+          [Unit]
+          Description=Node Exporter
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          User=monitoring
+          Group=monitoring
+          Type=simple
+          ExecStart=/usr/local/bin/node_exporter
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/node_exporter.service
+
+    - name: Start Node Exporter
+      systemd:
+        name: node_exporter
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Allow Prometheus port
+      ufw:
+        rule: allow
+        port: '9100'
+
+- name: Install Prometheus server
+  hosts: prometheus-server
+  become: yes
+  tasks:
+    - name: Create prometheus user
+      user:
+        name: prometheus
+        system: yes
+        shell: /bin/false
+        home: /var/lib/prometheus
+        create_home: yes
+
+    - name: Create prometheus directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: prometheus
+        group: prometheus
+        mode: '0755'
+      loop:
+        - /etc/prometheus
+        - /var/lib/prometheus
+
+    - name: Download Prometheus
+      get_url:
+        url: https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.linux-amd64.tar.gz
+        dest: /tmp/prometheus.tar.gz
+
+    - name: Extract Prometheus
+      unarchive:
+        src: /tmp/prometheus.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Install Prometheus binaries
+      copy:
+        src: "/tmp/prometheus-2.47.0.linux-amd64/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: '0755'
+        owner: prometheus
+        group: prometheus
+        remote_src: yes
+      loop:
+        - prometheus
+        - promtool
+
+    - name: Configure Prometheus
+      template:
+        src: prometheus.yml.j2
+        dest: /etc/prometheus/prometheus.yml
+        owner: prometheus
+        group: prometheus
+      notify: restart prometheus
+
+    - name: Create Prometheus service
+      copy:
+        content: |
+          [Unit]
+          Description=Prometheus
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          User=prometheus
+          Group=prometheus
+          Type=simple
+          ExecStart=/usr/local/bin/prometheus \
+              --config.file /etc/prometheus/prometheus.yml \
+              --storage.tsdb.path /var/lib/prometheus/ \
+              --web.console.templates=/etc/prometheus/consoles \
+              --web.console.libraries=/etc/prometheus/console_libraries \
+              --web.listen-address=0.0.0.0:9090 \
+              --web.enable-lifecycle
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/prometheus.service
+
+    - name: Start Prometheus
+      systemd:
+        name: prometheus
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Allow Prometheus port
+      ufw:
+        rule: allow
+        port: '9090'
+
+  handlers:
+    - name: restart prometheus
+      systemd:
+        name: prometheus
+        state: restarted
